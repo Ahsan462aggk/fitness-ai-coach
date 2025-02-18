@@ -23,19 +23,7 @@ A robust FastAPI-based backend service that powers the Fitness AI Coach platform
 - **API Documentation**: Swagger/OpenAPI
 - **Testing**: pytest
 
-## 📦 Project Structure
 
-```
-fitness-ai-coach-backend/
-├── app/                    # Main application directory
-│   ├── api/               # API endpoints
-│   ├── core/              # Core functionality
-│   ├── db/                # Database models and migrations
-│   ├── schemas/           # Pydantic models
-│   └── services/          # Business logic
-├── tests/                 # Test files
-└── poetry.lock           # Dependency lock file
-```
 
 ## 🚀 Getting Started
 

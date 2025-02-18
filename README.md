@@ -30,7 +30,7 @@ The Fitness AI Coach is a full-stack application that combines the power of arti
 
 ```
 fitness-ai-coach/
-├── frontend/               # Next.js frontend application
+├── fitness-ai-coach-frontend/               # Next.js frontend application
 └── fitness-ai-coach-backend/  # FastAPI backend application
 ```
 
@@ -108,9 +108,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👥 Authors
 
-- Ahsan Ali Gill (ahs462agk@gmail.com) - Initial work
+- Ahsan Ali Gill (ahs462agk@gmail.com) 
 
 ## 🙏 Acknowledgments
 
-- OpenAI for AI capabilities
+- Google Gemini for AI capabilities
 - The open-source community 

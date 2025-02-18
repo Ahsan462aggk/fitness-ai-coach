@@ -23,17 +23,7 @@ A modern, responsive web application built with Next.js for the Fitness AI Coach
 - **Icons**: React Icons
 - **Notifications**: React Toastify
 
-## 📦 Project Structure
 
-```
-frontend/
-├── app/                # Next.js app directory
-├── public/            # Static assets
-├── utils/             # Utility functions
-├── components/        # Reusable UI components
-├── styles/           # Global styles
-└── types/            # TypeScript type definitions
-```
 
 ## 🚀 Getting Started
 

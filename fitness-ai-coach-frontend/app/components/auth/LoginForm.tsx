@@ -32,7 +32,7 @@ const LoginForm = () => {
 
     try {
       // Send a POST request to the backend with form data
-      const response = await axios.post('http://127.0.0.1:8000/users/login', requestBody);
+      const response = await axios.post('https://ahsan462agk-fitness-ai-coach.hf.space/users/login', requestBody);
 
       // Handle successful login
       if (response.status === 200) {

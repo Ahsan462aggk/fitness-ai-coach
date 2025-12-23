@@ -33,7 +33,7 @@ const Dashboard = () => {
       try {
         let token = localStorage.getItem('token');
         // token= "dsadsad"
-        const response = await axios.get<UserData>('http://localhost:8000/users/profile', { // Added type parameter
+        const response = await axios.get<UserData>('https://ahsan462agk-fitness-ai-coach.hf.space/users/profile', { // Added type parameter
           headers: {
             Authorization: `Bearer ${token}`,}
         });

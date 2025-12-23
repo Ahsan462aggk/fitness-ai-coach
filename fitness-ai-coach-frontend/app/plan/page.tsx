@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { FaDumbbell, FaUtensils, FaRunning, FaRegClock } from 'react-icons/fa';
 import { GiMuscleUp } from 'react-icons/gi';
@@ -64,7 +64,7 @@ interface PlanData {
   diet_plan: {
     diet_plan: DietPlan;
   };
-  plan_id:string
+  plan_id: string;
 }
 
 const PlanPage = () => {
@@ -75,134 +75,113 @@ const PlanPage = () => {
   const [currentPlanId, setCurrentPlanId] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
-    const checkAuthAndFetchPlan = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          router.push('/login');
-          return;
-        }
-
-        const response = await axios.get<PlanData>('https://ahsan462agk-fitness-ai-coach.hf.space/ai-generated-plan/generate-ai-plan', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        const planId = response.data.plan_id
-        setCurrentPlanId(planId);
-        
-        const existingFeedback = localStorage.getItem(`feedback-${planId}`);
-        setNeedsFeedback(!existingFeedback);
-
-        localStorage.setItem('currentPlan', JSON.stringify({
-          planId,
-          userId: response.data.workout_plan.userId,
-          data: response.data
-        }));
-
-        setPlanData(response.data);
-      } catch (err) {
-        if (err.response?.status === 401) {
-          toast.error("You are unauthorized, Please login again!");
-          localStorage.removeItem("token");
-          router.push("/login");
-        }
-        setError('Failed to fetch plan data');
-      } finally {
-        setLoading(false);
+  // Wrapped in useCallback to satisfy the dependency requirements for useEffect
+  const fetchPlanData = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push('/login');
+        return;
       }
-    };
 
-    checkAuthAndFetchPlan();
-  }, []);
-
-  
-const handleFeedbackSubmit = async (feedbackString: string) => {
-  try {
-    const token = localStorage.getItem("token");
-    
-    if (!currentPlanId) {
-      toast.error('Plan ID is missing');
-      return;
-    }
-
-    const response = await axios.post(
-      "https://ahsan462agk-fitness-ai-coach.hf.space/feedback/",
-      { 
-        plan_id: currentPlanId,
-        ratings: feedbackString 
-      },
-      {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json' 
-        }
-      }
-    );
-
-    if (response.status === 200 || response.status === 201) {
-      localStorage.setItem(`feedback-${currentPlanId}`, feedbackString);
-      toast.success('Feedback submitted successfully!');
-      setNeedsFeedback(false);
-
-      // Generate new plan
-      const newPlanResponse = await axios.get<PlanData>('https://ahsan462agk-fitness-ai-coach.hf.space/ai-generated-plan/generate-ai-plan', {
+      const response = await axios.get<PlanData>('https://ahsan462agk-fitness-ai-coach.hf.space/ai-generated-plan/generate-ai-plan', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Update plan data with new response
-      setPlanData(newPlanResponse.data);
+      const planId = response.data.plan_id;
+      setCurrentPlanId(planId);
       
-      // Update plan ID if it exists in the response
-      if (newPlanResponse.data.plan_id) {
-        setCurrentPlanId(newPlanResponse.data.plan_id);
-        
-        localStorage.setItem('currentPlan', JSON.stringify({
-          planId: newPlanResponse.data.plan_id,
-          data: newPlanResponse.data
-        }));
-      }
-    } else {
-      throw new Error('Unexpected response status');
-    }
-  } catch (error) {
-    console.error('Feedback submission error:', error);
-    toast.error(error.response?.data?.detail || 'Failed to submit feedback');
-  }
-};
+      const existingFeedback = localStorage.getItem(`feedback-${planId}`);
+      setNeedsFeedback(!existingFeedback);
 
-  // if (loading) return <div className="p-8 text-center text-gray-600">Loading your plan...</div>;
+      localStorage.setItem('currentPlan', JSON.stringify({
+        planId,
+        userId: response.data.workout_plan.userId,
+        data: response.data
+      }));
+
+      setPlanData(response.data);
+    } catch (err: unknown) {
+      // FIX: Check if err is an Axios error to access the status safely
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        toast.error("You are unauthorized, Please login again!");
+        localStorage.removeItem("token");
+        router.push("/login");
+      }
+      setError('Failed to fetch plan data');
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    fetchPlanData();
+  }, [fetchPlanData]);
+
+  const handleFeedbackSubmit = async (feedbackString: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      
+      if (!currentPlanId) {
+        toast.error('Plan ID is missing');
+        return;
+      }
+
+      const response = await axios.post(
+        "https://ahsan462agk-fitness-ai-coach.hf.space/feedback/",
+        { 
+          plan_id: currentPlanId,
+          ratings: feedbackString 
+        },
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json' 
+          }
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        localStorage.setItem(`feedback-${currentPlanId}`, feedbackString);
+        toast.success('Feedback submitted successfully!');
+        setNeedsFeedback(false);
+
+        // Fetch new plan after feedback
+        const newPlanResponse = await axios.get<PlanData>('https://ahsan462agk-fitness-ai-coach.hf.space/ai-generated-plan/generate-ai-plan', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        setPlanData(newPlanResponse.data);
+        
+        if (newPlanResponse.data.plan_id) {
+          const newId = newPlanResponse.data.plan_id;
+          setCurrentPlanId(newId);
+          localStorage.setItem('currentPlan', JSON.stringify({
+            planId: newId,
+            data: newPlanResponse.data
+          }));
+        }
+      }
+    } catch (err: unknown) {
+      console.error('Feedback submission error:', err);
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data?.detail || 'Failed to submit feedback');
+      } else {
+        toast.error('An unexpected error occurred');
+      }
+    }
+  };
+
   if (loading) return (
     <div className='flex items-center justify-center h-[100vh] w-full bg-white'>
-    <svg
-      width="100"
-      height="100"
-      viewBox="0 0 50 50"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <circle
-        cx="25"
-        cy="25"
-        r="20"
-        stroke="#00b4d8"
-        // stroke="#3498db"
-        strokeWidth="5"
-        fill="none"
-        strokeDasharray="100"
-        strokeDashoffset="50"
-      >
-        <animateTransform
-          attributeName="transform"
-          type="rotate"
-          from="0 25 25"
-          to="360 25 25"
-          dur="1s"
-          repeatCount="indefinite"
-        />
-      </circle>
-    </svg>
-  </div>
+      <svg width="100" height="100" viewBox="0 0 50 50">
+        <circle cx="25" cy="25" r="20" stroke="#00b4d8" strokeWidth="5" fill="none" strokeDasharray="100" strokeDashoffset="50">
+          <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite" />
+        </circle>
+      </svg>
+    </div>
   );
+
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 
   return (
@@ -326,12 +305,10 @@ const FeedbackForm = ({ onSubmit }: { onSubmit: (feedback: string) => Promise<vo
 
   const handleSubmit = async () => {
     if (!difficulty) return;
-    
     let feedbackString = `Difficulty: ${difficulty}`;
     if (comments.trim()) {
       feedbackString += ` | Comments: ${comments}`;
     }
-    
     await onSubmit(feedbackString);
   };
 
@@ -343,6 +320,7 @@ const FeedbackForm = ({ onSubmit }: { onSubmit: (feedback: string) => Promise<vo
           {['too-easy', 'balanced', 'too-hard'].map((level) => (
             <button
               key={level}
+              type="button"
               onClick={() => setDifficulty(level)}
               className={`p-4 rounded-lg transition-all ${
                 difficulty === level
@@ -368,6 +346,7 @@ const FeedbackForm = ({ onSubmit }: { onSubmit: (feedback: string) => Promise<vo
       </div>
 
       <button
+        type="button"
         onClick={handleSubmit}
         disabled={!difficulty}
         className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 disabled:bg-gray-300 transition-colors"
@@ -389,9 +368,18 @@ const ExerciseCard = ({ exercise }: { exercise: Exercise }) => (
   <div className="bg-blue-50 p-4 rounded-lg">
     <h4 className="text-lg font-semibold mb-2">{exercise.name}</h4>
     <div className="grid grid-cols-3 gap-2 mb-3">
-      <InfoCard title="Sets" value={exercise.sets.toString()} />
-      <InfoCard title="Reps" value={exercise.reps} />
-      <InfoCard title="Rest" value={exercise.rest} />
+      <div className="bg-white/50 p-2 rounded">
+        <h5 className="text-[10px] uppercase text-gray-400">Sets</h5>
+        <p className="font-bold">{exercise.sets}</p>
+      </div>
+      <div className="bg-white/50 p-2 rounded">
+        <h5 className="text-[10px] uppercase text-gray-400">Reps</h5>
+        <p className="font-bold">{exercise.reps}</p>
+      </div>
+      <div className="bg-white/50 p-2 rounded">
+        <h5 className="text-[10px] uppercase text-gray-400">Rest</h5>
+        <p className="font-bold">{exercise.rest}</p>
+      </div>
     </div>
     <p className="text-gray-600 text-sm">{exercise.description}</p>
   </div>
@@ -400,17 +388,17 @@ const ExerciseCard = ({ exercise }: { exercise: Exercise }) => (
 const MealCard = ({ meal }: { meal: Meal | Snack }) => (
   <div className="bg-green-50 p-4 rounded-lg">
     <h4 className="text-lg font-semibold mb-2">{meal.name}</h4>
-    <p className="text-gray-600 mb-3">{meal.description}</p>
+    <p className="text-gray-600 mb-3 text-sm">{meal.description}</p>
     
-    <h5 className="font-semibold text-sm mb-1">Ingredients:</h5>
+    <h5 className="font-semibold text-xs mb-1">Ingredients:</h5>
     <ul className="list-disc list-inside mb-3">
       {meal.ingredients.map((ingredient, i) => (
-        <li key={i} className="text-sm text-gray-600">{ingredient}</li>
+        <li key={i} className="text-[12px] text-gray-600">{ingredient}</li>
       ))}
     </ul>
     
-    <h5 className="font-semibold text-sm mb-1">Instructions:</h5>
-    <p className="text-gray-600 text-sm">{meal.instructions}</p>
+    <h5 className="font-semibold text-xs mb-1">Instructions:</h5>
+    <p className="text-gray-600 text-xs">{meal.instructions}</p>
   </div>
 );
 

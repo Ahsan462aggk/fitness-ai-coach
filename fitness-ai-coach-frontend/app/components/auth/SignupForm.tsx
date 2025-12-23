@@ -69,7 +69,7 @@ const Router= useRouter();
     };
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/users/signup", payload);
+      const response = await axios.post("https://ahsan462agk-fitness-ai-coach.hf.space/users/signup", payload);
       console.log("Response from API:", response.data);
       toast.success("Registration successful! Redirecting to login page...");
       Router.push("/login");

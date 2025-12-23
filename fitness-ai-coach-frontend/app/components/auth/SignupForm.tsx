@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+// REMOVED: import Link from "next/link"; (This was causing the error)
 import { FC, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -24,7 +24,10 @@ const RegistrationForm: FC = () => {
 
   const [showPasswordMismatchPopup, setShowPasswordMismatchPopup] = useState(false);
   const [showEmailInvalidPopup, setShowEmailInvalidPopup] = useState(false);
-const Router= useRouter();
+  
+  // Best practice: use lowercase 'router'
+  const router = useRouter();
+
   const handleNextStep = () => {
     if (step === 1 && name && gender && age) {
       setStep(2);
@@ -51,7 +54,6 @@ const Router= useRouter();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Create payload matching your API's expected structure
     const payload = {
       email,
       name,
@@ -72,7 +74,7 @@ const Router= useRouter();
       const response = await axios.post("https://ahsan462agk-fitness-ai-coach.hf.space/users/signup", payload);
       console.log("Response from API:", response.data);
       toast.success("Registration successful! Redirecting to login page...");
-      Router.push("/login");
+      router.push("/login");
     } catch (error) {
       console.error("Error during registration:", error);
       toast.error("An error occurred during registration. Please try again.");
@@ -403,7 +405,6 @@ const Router= useRouter();
             </div>
           </div>
         )}
-        {/* <p>already have an account <Link href="/login">Login</Link> </p> */}
       </div>
     </div>
   );

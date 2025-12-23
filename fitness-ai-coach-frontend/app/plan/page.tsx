@@ -84,7 +84,7 @@ const PlanPage = () => {
           return;
         }
 
-        const response = await axios.get<PlanData>('http://127.0.0.1:8000/ai-generated-plan/generate-ai-plan', {
+        const response = await axios.get<PlanData>('https://ahsan462agk-fitness-ai-coach.hf.space/ai-generated-plan/generate-ai-plan', {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -127,7 +127,7 @@ const handleFeedbackSubmit = async (feedbackString: string) => {
     }
 
     const response = await axios.post(
-      "http://127.0.0.1:8000/feedback/",
+      "https://ahsan462agk-fitness-ai-coach.hf.space/feedback/",
       { 
         plan_id: currentPlanId,
         ratings: feedbackString 
@@ -146,7 +146,7 @@ const handleFeedbackSubmit = async (feedbackString: string) => {
       setNeedsFeedback(false);
 
       // Generate new plan
-      const newPlanResponse = await axios.get<PlanData>('http://127.0.0.1:8000/ai-generated-plan/generate-ai-plan', {
+      const newPlanResponse = await axios.get<PlanData>('https://ahsan462agk-fitness-ai-coach.hf.space/ai-generated-plan/generate-ai-plan', {
         headers: { Authorization: `Bearer ${token}` }
       });
 

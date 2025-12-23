@@ -1,28 +1,40 @@
-// AuthContext.tsx
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
-const AuthContext = createContext(null);
+// Defined an interface for better TypeScript support
+interface AuthContextType {
+  isLoggedIn: boolean;
+  userName: string;
+  handleLogin: (userData: { name: string }) => void;
+  handleLogout: () => void;
+}
 
-export const AuthProvider = ({ children }) => {
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>('');
-  let Router= useRouter()
+  
+  // FIX: Changed 'let' to 'const' and used lowercase 'router' (convention)
+  const router = useRouter();
   
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('userData');
     setIsLoggedIn(!!token);
     if (userData) {
-      const parsedUserData = JSON.parse(userData);
-      setUserName(parsedUserData.name);
+      try {
+        const parsedUserData = JSON.parse(userData);
+        setUserName(parsedUserData.name || '');
+      } catch (e) {
+        console.error("Failed to parse userData", e);
+      }
     }
   }, []);
 
-  const handleLogin = (userData) => {
-    // localStorage.setItem('token', userData.token);
+  const handleLogin = (userData: { name: string }) => {
     localStorage.setItem('userData', JSON.stringify(userData));
     setIsLoggedIn(true);
     setUserName(userData.name);
@@ -33,7 +45,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('userData');
     setIsLoggedIn(false);
     setUserName('');
-    Router.push("/login")
+    router.push("/login"); // Updated to lowercase
   };
 
   return (
@@ -43,4 +55,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

@@ -11,49 +11,46 @@ const LoginForm = () => {
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  let router = useRouter();
+  
+  // FIX 1: Changed 'let' to 'const'
+  const router = useRouter();
   const { handleLogin } = useAuth();
 
   const handleLoginFormSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Clear any previous error messages
     setError('');
     setSuccessMessage(null);
 
-    // Set up the request body with the expected parameters
     const requestBody = new URLSearchParams();
-    requestBody.append('grant_type', 'password'); // Specific to your backend request
-    requestBody.append('username', email); // Email as the username
-    requestBody.append('password', password); // Password
-    requestBody.append('scope', 'openid'); // You can adjust the scope if needed
-    requestBody.append('client_id', 'your-client-id'); // Your client ID
-    requestBody.append('client_secret', 'your-client-secret'); // Your client secret
+    requestBody.append('grant_type', 'password');
+    requestBody.append('username', email);
+    requestBody.append('password', password);
+    requestBody.append('scope', 'openid');
+    requestBody.append('client_id', 'your-client-id');
+    requestBody.append('client_secret', 'your-client-secret');
 
     try {
-      // Send a POST request to the backend with form data
       const response = await axios.post('https://ahsan462agk-fitness-ai-coach.hf.space/users/login', requestBody);
 
-      // Handle successful login
       if (response.status === 200) {
-        // Save the access token to local storage
         localStorage.setItem('token', response.data.access_token);
         const userData = { name: email };
         localStorage.setItem('userData', JSON.stringify(userData));
-        handleLogin(email); // Update the Auth Context state
+        handleLogin(email);
 
         setSuccessMessage('Login successful! Redirecting...');
         toast.success('login successful');
         router.push('/dashboard');
-        // Redirect or do something after a successful login
+        
         setTimeout(() => {
           setSuccessMessage(null);
         }, 2000);
       } else if (response.status === 401) {
         toast.error('invalid credentials');
       }
-    } catch (err) {
-      // Handle error (invalid credentials, etc.)
+    } catch (_err) { 
+      // FIX 2: Added underscore to 'err' since it is unused
       setError('Invalid credentials or server error. Please try again.');
     }
   };
@@ -63,10 +60,7 @@ const LoginForm = () => {
       <div className="bg-white p-10 rounded-xl shadow-xl w-full max-w-md transform transition-all duration-500 opacity-0 animate-fade-in">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6 animate-slide-in-from-left">Login to Your Account</h2>
 
-        {/* Display success message if available */}
         {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
-
-        {/* Display error message if available */}
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
         <form onSubmit={handleLoginFormSubmit} className="space-y-6">
@@ -101,7 +95,8 @@ const LoginForm = () => {
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
+          {/* FIX 3: Used &apos; for the apostrophe */}
+          Don&apos;t have an account?{' '}
           <a href="/register" className="text-blue-600 hover:text-blue-700">Register</a>
         </p>
       </div>
